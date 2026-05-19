@@ -150,6 +150,107 @@
                 }
                 console.error('[Portal][WindowPromiseRejection]', event.reason || event);
             });
+            
+            // Global Interceptor for Edit & Delete Forms
+            document.addEventListener('submit', async function (e) {
+                const form = e.target;
+                
+                // Only process POST forms that use Laravel's method spoofing
+                if (form.method && form.method.toUpperCase() === 'POST') {
+                    const methodInput = form.querySelector('input[name="_method"]');
+                    if (methodInput) {
+                        const method = methodInput.value.toUpperCase();
+                        if (['DELETE', 'PUT', 'PATCH'].includes(method)) {
+                            // Opt-out attribute or already handled by another script
+                            if (form.hasAttribute('data-no-ajax') || e.defaultPrevented) return;
+                            
+                            e.preventDefault();
+                            
+                            const submitBtn = form.querySelector('button[type="submit"]') || form.querySelector('input[type="submit"]');
+                            const originalContent = submitBtn ? submitBtn.innerHTML : '';
+                            const isDelete = method === 'DELETE';
+                            
+                            if (submitBtn) {
+                                submitBtn.disabled = true;
+                                if (!isDelete) {
+                                    submitBtn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Processing...';
+                                } else {
+                                    submitBtn.classList.add('opacity-50', 'pointer-events-none');
+                                }
+                            }
+
+                            try {
+                                const formData = new FormData(form);
+                                const res = await fetch(form.action, {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-Requested-With': 'XMLHttpRequest',
+                                        'Accept': 'application/json',
+                                        // CSRF token is already in the formData since it's a standard Laravel form
+                                    },
+                                    body: formData
+                                });
+
+                                // Handle Validation Errors (422)
+                                if (res.status === 422) {
+                                    const data = await res.json();
+                                    const firstError = Object.values(data.errors || {})[0]?.[0];
+                                    window.toast.error(firstError || data.message || 'Validation failed.');
+                                    if (submitBtn) {
+                                        submitBtn.disabled = false;
+                                        if (!isDelete) submitBtn.innerHTML = originalContent;
+                                        else submitBtn.classList.remove('opacity-50', 'pointer-events-none');
+                                    }
+                                    return;
+                                }
+
+                                const data = await res.json();
+                                
+                                if (res.ok || data.success) {
+                                    window.toast.success(data.message || 'Operation completed successfully.');
+                                    
+                                    if (isDelete) {
+                                        const row = form.closest('tr');
+                                        const card = form.closest('.glass-card') || form.closest('.bg-white');
+                                        
+                                        if (row) {
+                                            row.style.transition = 'all 0.3s ease';
+                                            row.style.opacity = '0';
+                                            row.style.transform = 'translateX(20px)';
+                                            setTimeout(() => row.remove(), 300);
+                                        } else if (card && !card.classList.contains('min-h-screen')) {
+                                            card.style.transition = 'opacity 0.3s ease';
+                                            card.style.opacity = '0';
+                                            setTimeout(() => card.remove(), 300);
+                                        } else {
+                                            // Fallback if structure is unknown
+                                            setTimeout(() => window.location.reload(), 1000);
+                                        }
+                                    } else {
+                                        // Edit success - stay on page, restore button
+                                        if (submitBtn) {
+                                            submitBtn.disabled = false;
+                                            submitBtn.innerHTML = '<i class="bi bi-check2"></i> Saved';
+                                            setTimeout(() => {
+                                                if (submitBtn) submitBtn.innerHTML = originalContent;
+                                            }, 3000);
+                                        }
+                                    }
+                                } else {
+                                    throw new Error(data.message || 'Server error occurred.');
+                                }
+                            } catch (err) {
+                                window.toast.error(err.message || 'An unexpected error occurred. Check connection.');
+                                if (submitBtn) {
+                                    submitBtn.disabled = false;
+                                    if (!isDelete) submitBtn.innerHTML = originalContent;
+                                    else submitBtn.classList.remove('opacity-50', 'pointer-events-none');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         })();
     </script>
     @stack('scripts')

@@ -62,12 +62,20 @@
 
     <!-- ─── Strategic Metric Matrix ─── -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        @foreach([
-            ['label' => 'Academic Faculty', 'value' => $stats['teachers'], 'icon' => 'bi-mortarboard', 'color' => 'indigo', 'route' => 'hod.teacher-assignments.index'],
-            ['label' => 'Department Students', 'value' => $stats['students'], 'icon' => 'bi-people', 'color' => 'slate', 'route' => null],
-            ['label' => 'Leave Requests', 'value' => $stats['pending_leaves'], 'icon' => 'bi-calendar-minus', 'color' => 'amber', 'route' => 'hod.leaves.index'],
-            ['label' => 'Strategic Notices', 'value' => $stats['active_notices'], 'icon' => 'bi-megaphone', 'color' => 'rose', 'route' => 'hod.notices.index'],
-        ] as $stat)
+        @php
+            $matrixStats = [
+                ['label' => 'Academic Faculty', 'value' => $stats['teachers'], 'icon' => 'bi-mortarboard', 'color' => 'indigo', 'route' => 'hod.teacher-assignments.index'],
+                ['label' => 'Department Students', 'value' => $stats['students'], 'icon' => 'bi-people', 'color' => 'slate', 'route' => null],
+            ];
+            
+            if (app(\App\Services\PortalAccessService::class)->moduleEnabled('leave')) {
+                $matrixStats[] = ['label' => 'Leave Requests', 'value' => $stats['pending_leaves'], 'icon' => 'bi-calendar-minus', 'color' => 'amber', 'route' => 'hod.leaves.index'];
+            }
+            
+            // Checking notice module dynamically just in case, though optional
+            $matrixStats[] = ['label' => 'Strategic Notices', 'value' => $stats['active_notices'], 'icon' => 'bi-megaphone', 'color' => 'rose', 'route' => 'hod.notices.index'];
+        @endphp
+        @foreach($matrixStats as $stat)
             <div class="bg-white border border-slate-200 rounded-[2rem] p-8 hover:border-{{ $stat['color'] }}-200 transition-all group relative overflow-hidden">
                 <div class="absolute -right-4 -top-4 opacity-5 group-hover:scale-110 transition-transform">
                     <i class="bi {{ $stat['icon'] }} text-8xl"></i>
@@ -86,7 +94,7 @@
     <!-- ─── Operational Grid ─── -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {{-- Departmental Bulletins --}}
-        <div class="lg:col-span-1 bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-sm flex flex-col">
+        <div class="@if(app(\App\Services\PortalAccessService::class)->moduleEnabled('leave')) lg:col-span-1 @else lg:col-span-3 @endif bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-sm flex flex-col">
             <div class="px-10 py-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
                 <div>
                     <h4 class="text-xl font-black text-slate-800 tracking-tight">Bulletins</h4>
@@ -120,6 +128,7 @@
         </div>
 
         {{-- Pending Strategic Approvals --}}
+        @if(app(\App\Services\PortalAccessService::class)->moduleEnabled('leave'))
         <div class="lg:col-span-2 bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-xl text-white">
             <div class="px-10 py-8 border-b border-white/5 flex items-center justify-between">
                 <div>
@@ -177,6 +186,7 @@
                 </table>
             </div>
         </div>
+        @endif
     </div>
 
     <!-- ─── Notice Detailer Overlay ─── -->

@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\MaintenanceModeGuard::class,
             \App\Http\Middleware\AuditTrailMiddleware::class,
             \App\Http\Middleware\PreventEditWhenDisabled::class,
+            \App\Http\Middleware\AjaxRedirectInterceptor::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
