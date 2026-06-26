@@ -35,8 +35,7 @@ class DashboardController extends Controller
             ->get();
 
         $events = Event::query()
-            ->whereDate('event_date', '>=', now()->toDateString())
-            ->orderBy('event_date')
+            ->latest('event_date')
             ->take(5)
             ->get();
 

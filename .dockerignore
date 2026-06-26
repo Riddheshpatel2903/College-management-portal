@@ -1,0 +1,68 @@
+# ---- Version control ----
+.git
+.gitattributes
+.gitignore
+
+# ---- Development environment ----
+.env
+.env.*
+!.env.example
+
+# ---- Node / frontend tooling ----
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# ---- Local dev only ----
+.herd/
+.sail/
+Homestead.json
+Homestead.yaml
+.phpactor.json
+.phpunit.result.cache
+/.phpunit.cache
+/.phpunit.result.cache
+
+# ---- IDE / editor ----
+.idea/
+.vscode/
+.zed/
+.nova/
+.fleet/
+*.swp
+*.swo
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+
+# ---- Laravel cache (rebuilt at runtime) ----
+bootstrap/cache/*.php
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/testing/
+storage/framework/views/
+storage/logs/
+
+# ---- Vite dev artifacts (production assets are re-built in Node stage) ----
+public/hot
+
+# ---- Tests (not needed in production image) ----
+tests/
+phpunit.xml
+.phpunit.result.cache
+
+# ---- Documentation ----
+README.md
+CHANGELOG.md
+
+# ---- Docker files (already inside the image build context, no need to copy back) ----
+docker/
+
+# ---- SQLite dev database ----
+database/database.sqlite
+database/*.sqlite
+
+# ---- Misc ----
+*.log
+test.php

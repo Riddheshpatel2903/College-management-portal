@@ -169,12 +169,11 @@
         @endcanPage
 
         {{-- Events Registry --}}
-        @canPage('student.notices.index')
         <div class="bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-xl text-white">
             <div class="px-10 py-8 border-b border-white/5 flex items-center justify-between">
                 <div>
                     <h4 class="text-xl font-black tracking-tight leading-none mb-1">Campus Engagements</h4>
-                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Upcoming academic & co-curricular events</p>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Recent & Upcoming events</p>
                 </div>
                 <div class="h-10 w-10 rounded-xl bg-white/10 text-indigo-400 flex items-center justify-center border border-white/5">
                     <i class="bi bi-calendar-event"></i>
@@ -200,12 +199,11 @@
                 @empty
                 <div class="py-20 flex flex-col items-center justify-center text-center opacity-20">
                     <i class="bi bi-calendar-x text-5xl mb-4"></i>
-                    <p class="text-xs font-black uppercase tracking-widest text-white">Registry empty for upcoming dates</p>
+                    <p class="text-xs font-black uppercase tracking-widest text-white">No recent or upcoming events</p>
                 </div>
                 @endforelse
             </div>
         </div>
-        @endcanPage
     </div>
 
     <!-- ─── Notice Detailing Modal ─── -->

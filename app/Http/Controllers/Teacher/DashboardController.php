@@ -33,15 +33,24 @@ class DashboardController extends Controller
             ->pluck('subject')
             ->filter();
 
-        $todayClasses = Schedule::query()
+        $todaySchedules = Schedule::query()
+            ->with(['subject.course', 'classroom'])
             ->where('teacher_id', $teacher->id)
             ->where('day_of_week', strtolower(now()->format('l')))
-            ->count();
+            ->orderBy('start_time')
+            ->get();
+            
+        $todayClasses = $todaySchedules->count();
 
         $notices = Notice::with('user:id,name')
             ->whereIn('target_role', ['all', 'teacher'])
             ->where('is_active', true)
             ->latest()
+            ->take(5)
+            ->get();
+
+        $events = \App\Models\Event::query()
+            ->latest('event_date')
             ->take(5)
             ->get();
 
@@ -51,7 +60,9 @@ class DashboardController extends Controller
             'subjects',
             'assignments',
             'notices',
-            'todayClasses'
+            'todayClasses',
+            'events',
+            'todaySchedules'
         ));
     }
 }

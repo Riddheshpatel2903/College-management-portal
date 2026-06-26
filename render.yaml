@@ -1,0 +1,117 @@
+# =============================================================================
+# render.yaml — Infrastructure as Code for Render.com
+# College Management Portal — Laravel 12 + MySQL
+# =============================================================================
+#
+# Usage:
+#   - Push this file to your Git repository root.
+#   - In Render dashboard → "New" → "Blueprint" → connect your repo.
+#   - Render will automatically provision the web service defined below.
+#
+# IMPORTANT: You MUST add the environment variables listed in the
+# "Environment Variables" section in your Render service's environment settings
+# (or in the Render dashboard). Values marked as "sync: false" are secret and
+# must be set manually in the Render dashboard — they are NOT stored in this file.
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Web Service — Laravel application
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: college-portal
+    runtime: docker
+    region: oregon          # Change to: frankfurt, singapore, ohio, virginia
+
+    # ---- Docker build settings ----
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+
+    # ---- Render will map this internal port to HTTPS externally ----
+    # Our Nginx listens on 8080 (set in docker/nginx/default.conf)
+    port: 8080
+
+    # ---- Health check — uses Laravel 12's built-in /up route ----
+    healthCheckPath: /up
+
+    # ---- Instance type ----
+    # starter  = 512 MB RAM, 0.5 CPU  (free tier — good to start)
+    # standard = 2 GB RAM, 1 CPU      (recommended for production)
+    plan: starter
+
+    # ---- Scaling ----
+    scaling:
+      minInstances: 1
+      maxInstances: 1        # Increase for horizontal scaling
+
+    # ---- Persistent Disk ----
+    # Needed for: storage/app/public uploads, storage/logs (optional but recommended)
+    disk:
+      name: college-portal-storage
+      mountPath: /var/www/html/storage/app
+      sizeGB: 10             # Adjust based on file upload needs
+
+    # ---- Environment Variables ----
+    # Values with 'value:' are safe to store here.
+    # Values with 'sync: false' MUST be set in the Render dashboard (they are secrets).
+    envVars:
+      # ---- Application ----
+      - key: APP_NAME
+        value: "College Management Portal"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        # Replace with your actual Render URL or custom domain
+        value: https://college-portal.onrender.com
+
+      # !! SECRET: Generate with: php artisan key:generate --show
+      # Set this in Render dashboard → Environment → APP_KEY
+      - key: APP_KEY
+        sync: false
+
+      # ---- Logging ----
+      - key: LOG_CHANNEL
+        value: stack
+      - key: LOG_STACK
+        value: stderr
+      - key: LOG_LEVEL
+        value: error
+
+      # ---- Database (MySQL — connect to external provider) ----
+      # Options: PlanetScale, Railway, Aiven, TiDB Cloud, or any MySQL host
+      # Set ALL of these as secrets in the Render dashboard.
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        sync: false          # e.g. dpg-xxxxxxxxxxxx-a.oregon-postgres.render.com
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_DATABASE
+        sync: false          # e.g. college_portal
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+      # ---- Session / Cache / Queue ----
+      # Using 'database' driver (no Redis required for starter plan)
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_LIFETIME
+        value: "120"
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+
+      # ---- Other ----
+      - key: BROADCAST_CONNECTION
+        value: log
+      - key: FILESYSTEM_DISK
+        value: local
+
+      # ---- Migrations (set to "true" on first deploy, then remove or set to "false") ----
+      - key: RUN_MIGRATIONS
+        value: "false"

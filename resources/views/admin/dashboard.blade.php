@@ -122,41 +122,39 @@
         @endcanPage
 
         {{-- Engagement Schedule --}}
-        @canPage('admin.events.index')
-            <div class="bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-xl text-white">
-                <div class="px-10 py-8 border-b border-white/5 flex items-center justify-between">
-                    <div>
-                        <h3 class="text-xl font-black text-white tracking-tight leading-none mb-1 uppercase">Campus Events</h3>
-                    </div>
-                    <div class="h-10 w-10 rounded-xl bg-white/10 text-indigo-400 flex items-center justify-center border border-white/5">
-                        <i class="bi bi-calendar-event"></i>
-                    </div>
+        <div class="bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-xl text-white">
+            <div class="px-10 py-8 border-b border-white/5 flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-black text-white tracking-tight leading-none mb-1 uppercase">Campus Events</h3>
                 </div>
-                <div class="p-6 space-y-4">
-                    @forelse($events as $event)
-                        <div class="flex items-center gap-8 p-6 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group">
-                            <div class="h-16 w-16 flex flex-col items-center justify-center bg-white rounded-2xl text-slate-900 shadow-xl shrink-0 transition-transform group-hover:scale-105">
-                                <span class="text-[10px] font-black uppercase tracking-widest leading-none text-indigo-600">{{ \Carbon\Carbon::parse($event->event_date)->format('M') }}</span>
-                                <span class="text-2xl font-black leading-tight mt-1">{{ \Carbon\Carbon::parse($event->event_date)->format('d') }}</span>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h4 class="text-base font-black truncate group-hover:text-indigo-400 transition-colors uppercase tracking-tight">{{ $event->title }}</h4>
-                                <div class="flex items-center gap-6 mt-3 text-slate-500">
-                                    <span class="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                                        <i class="bi bi-geo-alt-fill text-indigo-500"></i> {{ $event->location }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="py-24 text-center opacity-20">
-                            <i class="bi bi-calendar-x text-5xl mb-4 block"></i>
-                            <p class="text-[11px] font-black uppercase tracking-widest text-white">Registry clear for upcoming events</p>
-                        </div>
-                    @endforelse
+                <div class="h-10 w-10 rounded-xl bg-white/10 text-indigo-400 flex items-center justify-center border border-white/5">
+                    <i class="bi bi-calendar-event"></i>
                 </div>
             </div>
-        @endcanPage
+            <div class="p-6 space-y-4">
+                @forelse($events as $event)
+                    <div class="flex items-center gap-8 p-6 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group">
+                        <div class="h-16 w-16 flex flex-col items-center justify-center bg-white rounded-2xl text-slate-900 shadow-xl shrink-0 transition-transform group-hover:scale-105">
+                            <span class="text-[10px] font-black uppercase tracking-widest leading-none text-indigo-600">{{ \Carbon\Carbon::parse($event->event_date)->format('M') }}</span>
+                            <span class="text-2xl font-black leading-tight mt-1">{{ \Carbon\Carbon::parse($event->event_date)->format('d') }}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-base font-black truncate group-hover:text-indigo-400 transition-colors uppercase tracking-tight">{{ $event->title }}</h4>
+                            <div class="flex items-center gap-6 mt-3 text-slate-500">
+                                <span class="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                                    <i class="bi bi-geo-alt-fill text-indigo-500"></i> {{ $event->location }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="py-24 text-center opacity-20">
+                        <i class="bi bi-calendar-x text-5xl mb-4 block"></i>
+                        <p class="text-[11px] font-black uppercase tracking-widest text-white">No recent or upcoming events</p>
+                    </div>
+                @endforelse
+            </div>
+        </div>
     </div>
 
     <!-- ─── Bulletin Detailing Modal ─── -->

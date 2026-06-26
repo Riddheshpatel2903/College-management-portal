@@ -22,8 +22,8 @@ class DashboardController extends Controller
         $notices = Notice::latest()->take(5)->get();
         // Since Event model might not exist or be different, let's use Notice with high priority for now as a fallback
         // OR check if Event model exists. It does exist in Models dir.
-        $events = Event::where('event_date', '>=', now())
-            ->orderBy('event_date')
+        $events = \App\Models\Event::query()
+            ->latest('event_date')
             ->take(5)
             ->get();
 
