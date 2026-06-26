@@ -9,7 +9,14 @@ class LargeCollegeSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        $driver = DB::getDriverName();
+
+        // Disable foreign key checks — syntax differs by driver
+        if ($driver === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        } elseif ($driver === 'pgsql') {
+            DB::statement('SET session_replication_role = replica');
+        }
 
         $this->call([
             // Core users / roles / principal
@@ -50,6 +57,11 @@ class LargeCollegeSeeder extends Seeder
             ActivityLogSeeder::class,
         ]);
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        // Re-enable foreign key checks
+        if ($driver === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        } elseif ($driver === 'pgsql') {
+            DB::statement('SET session_replication_role = DEFAULT');
+        }
     }
 }

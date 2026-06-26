@@ -111,6 +111,13 @@ if [ "${RUN_MIGRATIONS}" = "true" ]; then
     echo "[→] Running database migrations..."
     php artisan migrate --force --no-interaction
     echo "[✓] Migrations complete."
+
+    # Seed demo data (only if RUN_SEEDER=true, runs once alongside migrations)
+    if [ "${RUN_SEEDER}" = "true" ]; then
+        echo "[→] Seeding demo data..."
+        php artisan db:seed --force --no-interaction
+        echo "[✓] Seeding complete."
+    fi
 else
     echo "[!] Skipping migrations (set RUN_MIGRATIONS=true to enable)."
 fi
