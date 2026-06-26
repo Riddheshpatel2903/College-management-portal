@@ -56,9 +56,6 @@ phpunit.xml
 README.md
 CHANGELOG.md
 
-# ---- Docker files (already inside the image build context, no need to copy back) ----
-docker/
-
 # ---- SQLite dev database ----
 database/database.sqlite
 database/*.sqlite
