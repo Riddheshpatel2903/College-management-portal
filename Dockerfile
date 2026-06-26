@@ -33,10 +33,13 @@ WORKDIR /app
 COPY composer.json composer.lock ./
 
 # Install production dependencies only, optimized autoloader
+# --no-scripts: prevents post-autoload-dump from running "php artisan package:discover"
+#               (artisan doesn't exist in this stage — only composer.json is copied here)
 RUN composer install \
     --no-dev \
     --no-interaction \
     --no-progress \
+    --no-scripts \
     --optimize-autoloader \
     --prefer-dist
 
