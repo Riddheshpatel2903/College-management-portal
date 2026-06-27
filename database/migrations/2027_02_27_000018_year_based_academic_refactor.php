@@ -136,14 +136,22 @@ return new class extends Migration
 
         if (Schema::hasTable('semesters') && $driver !== 'sqlite') {
             if ($driver === 'pgsql') {
+                // PostgreSQL: Cannot reference the target table alias in FROM-clause JOINs.
+                // Use a derived subquery to pre-join, then match on results.id.
                 DB::statement('
-                    UPDATE results r
-                    SET course_id       = s.course_id,
-                        semester_number = COALESCE(sem.semester_number, 1),
-                        academic_year   = GREATEST(1, CEIL(COALESCE(sem.semester_number, 1)::numeric / 2)::int)
-                    FROM students s
-                    LEFT JOIN semesters sem ON sem.id = r.semester_id
-                    WHERE s.id = r.student_id
+                    UPDATE results
+                    SET course_id       = sub.course_id,
+                        semester_number = COALESCE(sub.semester_number, 1),
+                        academic_year   = GREATEST(1, CEIL(COALESCE(sub.semester_number, 1)::numeric / 2)::int)
+                    FROM (
+                        SELECT r.id,
+                               s.course_id,
+                               sem.semester_number
+                        FROM results r
+                        JOIN students s ON s.id = r.student_id
+                        LEFT JOIN semesters sem ON sem.id = r.semester_id
+                    ) AS sub
+                    WHERE results.id = sub.id
                 ');
             } else {
                 DB::statement('
@@ -156,6 +164,7 @@ return new class extends Migration
                 ');
             }
         }
+
 
         Schema::table('assignments', function (Blueprint $table) {
             if (! Schema::hasColumn('assignments', 'academic_year')) {
