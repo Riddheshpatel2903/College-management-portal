@@ -16,7 +16,7 @@ use App\Http\Controllers\API\TeacherApiController;
 use App\Http\Controllers\API\TimetableApiController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->name('api.')->group(function () {
     Route::post('login', [\App\Http\Controllers\API\AuthController::class, 'login']);
 
     Route::middleware(['auth:sanctum'])->group(function () {
