@@ -14,8 +14,6 @@ class LargeCollegeSeeder extends Seeder
         // Disable foreign key checks — syntax differs by driver
         if ($driver === 'mysql') {
             DB::statement('SET FOREIGN_KEY_CHECKS=0');
-        } elseif ($driver === 'pgsql') {
-            DB::statement('SET session_replication_role = replica');
         }
 
         $this->call([
@@ -60,8 +58,6 @@ class LargeCollegeSeeder extends Seeder
         // Re-enable foreign key checks
         if ($driver === 'mysql') {
             DB::statement('SET FOREIGN_KEY_CHECKS=1');
-        } elseif ($driver === 'pgsql') {
-            DB::statement('SET session_replication_role = DEFAULT');
         }
     }
 }
