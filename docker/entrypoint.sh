@@ -124,7 +124,11 @@ fi
 # -----------------------------------------------------------------------------
 # 6. Run migrations (only if RUN_MIGRATIONS=true is explicitly set)
 # -----------------------------------------------------------------------------
-if [ "${RUN_MIGRATIONS}" = "true" ]; then
+if [ "${FRESH_DATABASE}" = "true" ]; then
+    echo "[→] FRESH_DATABASE=true detected! Wiping database, running migrations and seeders fresh..."
+    php artisan migrate:fresh --force --seed --no-interaction
+    echo "[✓] Fresh migration and seeding complete."
+elif [ "${RUN_MIGRATIONS}" = "true" ]; then
     echo "[→] Running database migrations..."
     php artisan migrate --force --no-interaction
     echo "[✓] Migrations complete."
