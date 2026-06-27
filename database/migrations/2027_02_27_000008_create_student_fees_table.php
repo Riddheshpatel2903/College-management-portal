@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('fee_structure_id')->constrained()->onDelete('cascade');
             $table->decimal('total_amount', 10, 2);
             $table->decimal('paid_amount', 10, 2)->default(0);
-            $table->decimal('pending_amount', 10, 2)->virtualAs('total_amount - paid_amount');
+            $table->decimal('pending_amount', 10, 2)->default(0); // updated by app; virtualAs not portable to PostgreSQL
             $table->enum('status', ['pending', 'partial', 'paid', 'overdue'])->default('pending');
             $table->date('due_date');
             $table->date('last_payment_date')->nullable();

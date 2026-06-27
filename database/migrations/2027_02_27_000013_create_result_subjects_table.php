@@ -17,9 +17,9 @@ return new class extends Migration
             $table->foreignId('student_id')->constrained()->onDelete('cascade');
             $table->decimal('internal_marks', 5, 2)->default(0);
             $table->decimal('external_marks', 5, 2)->default(0);
-            $table->decimal('total_marks', 5, 2)->virtualAs('internal_marks + external_marks');
+            $table->decimal('total_marks', 5, 2)->default(0);     // = internal + external (set by app)
             $table->decimal('max_marks', 5, 2)->default(100);
-            $table->decimal('percentage', 5, 2)->virtualAs('(internal_marks + external_marks) / max_marks * 100');
+            $table->decimal('percentage', 5, 2)->default(0);        // = (total/max)*100 (set by app)
             $table->string('grade', 2)->nullable(); // A+, A, B+, etc.
             $table->decimal('grade_point', 4, 2)->default(0); // 10.00, 9.00, etc.
             $table->integer('credits')->default(3);

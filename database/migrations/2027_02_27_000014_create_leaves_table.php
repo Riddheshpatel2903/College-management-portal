@@ -17,7 +17,12 @@ return new class extends Migration
             $table->date('end_date');
             if (\Illuminate\Support\Facades\DB::getDriverName() === 'sqlite') {
                 $table->integer('total_days')->virtualAs('CAST(julianday(end_date) - julianday(start_date) AS INTEGER) + 1');
+            } elseif (\Illuminate\Support\Facades\DB::getDriverName() === 'pgsql') {
+                // PostgreSQL supports STORED generated columns (not VIRTUAL).
+                // Date subtraction of two DATE values yields an integer in PostgreSQL.
+                $table->integer('total_days')->storedAs('(end_date - start_date) + 1');
             } else {
+                // MySQL
                 $table->integer('total_days')->virtualAs('DATEDIFF(end_date, start_date) + 1');
             }
             $table->enum('leave_type', ['sick', 'casual', 'emergency', 'other'])->default('casual');
