@@ -37,7 +37,9 @@ return new class extends Migration
             DB::statement('UPDATE subjects SET semester_number = COALESCE(semester_number, semester_sequence)');
         }
         if (Schema::hasColumn('subjects', 'is_lab') && Schema::hasColumn('subjects', 'type')) {
-            DB::statement("UPDATE subjects SET type = CASE WHEN is_lab = 1 THEN 'lab' ELSE 'lecture' END WHERE type IS NOT NULL");
+            // PostgreSQL boolean columns cannot be compared with integer 1 — must use `true`
+            $isLabTrue = DB::getDriverName() === 'pgsql' ? 'true' : '1';
+            DB::statement("UPDATE subjects SET type = CASE WHEN is_lab = {$isLabTrue} THEN 'lab' ELSE 'lecture' END WHERE type IS NOT NULL");
         }
         if (Schema::hasColumn('subjects', 'weekly_hours') && Schema::hasColumn('subjects', 'hours_per_week')) {
             DB::statement('UPDATE subjects SET hours_per_week = COALESCE(hours_per_week, weekly_hours, credits, 4)');

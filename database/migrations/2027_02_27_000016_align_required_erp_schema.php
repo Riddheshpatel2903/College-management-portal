@@ -41,6 +41,15 @@ return new class extends Migration
                      )
                      WHERE subject_id IS NULL'
                 );
+            } elseif (\Illuminate\Support\Facades\DB::getDriverName() === 'pgsql') {
+                // PostgreSQL does not support MySQL-style multi-table UPDATE with JOIN.
+                DB::statement(
+                    'UPDATE teacher_subject_assignments tsa
+                     SET subject_id = ss.subject_id
+                     FROM semester_subjects ss
+                     WHERE ss.id = tsa.semester_subject_id
+                       AND tsa.subject_id IS NULL'
+                );
             } else {
                 DB::statement(
                     'UPDATE teacher_subject_assignments tsa
@@ -72,7 +81,12 @@ return new class extends Migration
 
         if (Schema::hasTable('semesters')) {
             DB::statement('UPDATE semesters SET sequence = semester_number WHERE sequence IS NULL');
-            DB::statement("UPDATE semesters SET is_active = CASE WHEN status = 'active' THEN 1 ELSE 0 END");
+            // PostgreSQL: boolean columns cannot be set to integer 1/0; use TRUE/FALSE
+            if (DB::getDriverName() === 'pgsql') {
+                DB::statement("UPDATE semesters SET is_active = CASE WHEN status = 'active' THEN TRUE ELSE FALSE END");
+            } else {
+                DB::statement("UPDATE semesters SET is_active = CASE WHEN status = 'active' THEN 1 ELSE 0 END");
+            }
         }
 
         if (! Schema::hasTable('attendance_records')) {

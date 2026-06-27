@@ -10,7 +10,8 @@ return new class extends Migration
     public function up(): void
     {
         // MySQL specific RAW SQL to mutate enum correctly without data loss
-        if (\Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
+        // PostgreSQL: role column is already VARCHAR — no ENUM type exists, skip
+        if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
             \Illuminate\Support\Facades\DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('admin', 'hod', 'teacher', 'student', 'accountant') DEFAULT 'student'");
         }
     }
@@ -20,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (\Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
+        if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
             \Illuminate\Support\Facades\DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('admin', 'hod', 'teacher', 'student') DEFAULT 'student'");
         }
     }

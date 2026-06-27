@@ -10,8 +10,11 @@ return new class extends Migration
     public function up(): void
     {
         $driver = DB::getDriverName();
-        if ($driver !== 'sqlite') {
-            // Transition legacy semester foreign keys to nullable so year-based records can be created.
+
+        // MySQL uses ALTER TABLE ... MODIFY to change nullability.
+        // PostgreSQL uses ALTER TABLE ... ALTER COLUMN ... DROP NOT NULL.
+        // Both are no-ops if the column is already nullable.
+        if ($driver === 'mysql') {
             if (Schema::hasColumn('students', 'current_semester_id')) {
                 DB::statement('ALTER TABLE students MODIFY current_semester_id BIGINT UNSIGNED NULL');
             }
@@ -45,6 +48,33 @@ return new class extends Migration
             if (Schema::hasColumn('result_subjects', 'semester_subject_id')) {
                 DB::statement('ALTER TABLE result_subjects MODIFY semester_subject_id BIGINT UNSIGNED NULL');
             }
+        } elseif ($driver === 'pgsql') {
+            // PostgreSQL: use ALTER COLUMN ... DROP NOT NULL for each column
+            $columnsToNullify = [
+                'students'                    => 'current_semester_id',
+                'fee_structures'              => 'semester_number',
+                'student_fees'                => 'semester_id',
+                'results'                     => 'semester_id',
+                'assignments'                 => 'semester_id',
+                'schedules'                   => 'semester_id',
+            ];
+            foreach ($columnsToNullify as $table => $column) {
+                if (Schema::hasColumn($table, $column)) {
+                    DB::statement("ALTER TABLE {$table} ALTER COLUMN {$column} DROP NOT NULL");
+                }
+            }
+            $tsaColumns = ['semester_id', 'semester_subject_id', 'academic_session_id'];
+            foreach ($tsaColumns as $col) {
+                if (Schema::hasColumn('teacher_subject_assignments', $col)) {
+                    DB::statement("ALTER TABLE teacher_subject_assignments ALTER COLUMN {$col} DROP NOT NULL");
+                }
+            }
+            if (Schema::hasColumn('attendance_sessions', 'semester_subject_id')) {
+                DB::statement('ALTER TABLE attendance_sessions ALTER COLUMN semester_subject_id DROP NOT NULL');
+            }
+            if (Schema::hasColumn('result_subjects', 'semester_subject_id')) {
+                DB::statement('ALTER TABLE result_subjects ALTER COLUMN semester_subject_id DROP NOT NULL');
+            }
         }
 
         Schema::table('students', function (Blueprint $table) {
@@ -73,14 +103,23 @@ return new class extends Migration
             }
         });
 
-        $driver = DB::getDriverName();
-
         if (Schema::hasTable('semesters') && $driver !== 'sqlite') {
-            DB::statement('
-                UPDATE student_fees sf
-                JOIN semesters sem ON sem.id = sf.semester_id
-                SET sf.academic_year = GREATEST(1, CEILING(sem.semester_number / 2))
-            ');
+            if ($driver === 'pgsql') {
+                // PostgreSQL does not support MySQL-style multi-table UPDATE with JOIN.
+                // Use a correlated subquery instead.
+                DB::statement('
+                    UPDATE student_fees sf
+                    SET academic_year = GREATEST(1, CEIL(sem.semester_number::numeric / 2)::int)
+                    FROM semesters sem
+                    WHERE sem.id = sf.semester_id
+                ');
+            } else {
+                DB::statement('
+                    UPDATE student_fees sf
+                    JOIN semesters sem ON sem.id = sf.semester_id
+                    SET sf.academic_year = GREATEST(1, CEILING(sem.semester_number / 2))
+                ');
+            }
         }
 
         Schema::table('results', function (Blueprint $table) {
@@ -96,14 +135,26 @@ return new class extends Migration
         });
 
         if (Schema::hasTable('semesters') && $driver !== 'sqlite') {
-            DB::statement('
-                UPDATE results r
-                JOIN students s ON s.id = r.student_id
-                LEFT JOIN semesters sem ON sem.id = r.semester_id
-                SET r.course_id = s.course_id,
-                    r.semester_number = COALESCE(sem.semester_number, 1),
-                    r.academic_year = GREATEST(1, CEILING(COALESCE(sem.semester_number, 1) / 2))
-            ');
+            if ($driver === 'pgsql') {
+                DB::statement('
+                    UPDATE results r
+                    SET course_id       = s.course_id,
+                        semester_number = COALESCE(sem.semester_number, 1),
+                        academic_year   = GREATEST(1, CEIL(COALESCE(sem.semester_number, 1)::numeric / 2)::int)
+                    FROM students s
+                    LEFT JOIN semesters sem ON sem.id = r.semester_id
+                    WHERE s.id = r.student_id
+                ');
+            } else {
+                DB::statement('
+                    UPDATE results r
+                    JOIN students s ON s.id = r.student_id
+                    LEFT JOIN semesters sem ON sem.id = r.semester_id
+                    SET r.course_id = s.course_id,
+                        r.semester_number = COALESCE(sem.semester_number, 1),
+                        r.academic_year = GREATEST(1, CEILING(COALESCE(sem.semester_number, 1) / 2))
+                ');
+            }
         }
 
         Schema::table('assignments', function (Blueprint $table) {
@@ -116,12 +167,22 @@ return new class extends Migration
         });
 
         if (Schema::hasTable('semesters') && $driver !== 'sqlite') {
-            DB::statement('
-                UPDATE assignments a
-                JOIN semesters sem ON sem.id = a.semester_id
-                SET a.semester_number = sem.semester_number,
-                    a.academic_year = GREATEST(1, CEILING(sem.semester_number / 2))
-            ');
+            if ($driver === 'pgsql') {
+                DB::statement('
+                    UPDATE assignments a
+                    SET semester_number = sem.semester_number,
+                        academic_year   = GREATEST(1, CEIL(sem.semester_number::numeric / 2)::int)
+                    FROM semesters sem
+                    WHERE sem.id = a.semester_id
+                ');
+            } else {
+                DB::statement('
+                    UPDATE assignments a
+                    JOIN semesters sem ON sem.id = a.semester_id
+                    SET a.semester_number = sem.semester_number,
+                        a.academic_year = GREATEST(1, CEILING(sem.semester_number / 2))
+                ');
+            }
         }
 
         Schema::table('attendance_sessions', function (Blueprint $table) {
@@ -140,15 +201,28 @@ return new class extends Migration
         });
 
         if (Schema::hasTable('semester_subjects') && Schema::hasTable('semesters') && $driver !== 'sqlite') {
-            DB::statement('
-                UPDATE attendance_sessions ats
-                JOIN semester_subjects ss ON ss.id = ats.semester_subject_id
-                JOIN semesters sem ON sem.id = ss.semester_id
-                SET ats.subject_id = ss.subject_id,
-                    ats.course_id = sem.course_id,
-                    ats.semester_number = sem.semester_number,
-                    ats.academic_year = GREATEST(1, CEILING(sem.semester_number / 2))
-            ');
+            if ($driver === 'pgsql') {
+                DB::statement('
+                    UPDATE attendance_sessions ats
+                    SET subject_id      = ss.subject_id,
+                        course_id       = sem.course_id,
+                        semester_number = sem.semester_number,
+                        academic_year   = GREATEST(1, CEIL(sem.semester_number::numeric / 2)::int)
+                    FROM semester_subjects ss
+                    JOIN semesters sem ON sem.id = ss.semester_id
+                    WHERE ss.id = ats.semester_subject_id
+                ');
+            } else {
+                DB::statement('
+                    UPDATE attendance_sessions ats
+                    JOIN semester_subjects ss ON ss.id = ats.semester_subject_id
+                    JOIN semesters sem ON sem.id = ss.semester_id
+                    SET ats.subject_id = ss.subject_id,
+                        ats.course_id = sem.course_id,
+                        ats.semester_number = sem.semester_number,
+                        ats.academic_year = GREATEST(1, CEILING(sem.semester_number / 2))
+                ');
+            }
         }
 
         Schema::table('result_subjects', function (Blueprint $table) {
@@ -158,11 +232,20 @@ return new class extends Migration
         });
 
         if (Schema::hasTable('semester_subjects') && $driver !== 'sqlite') {
-            DB::statement('
-                UPDATE result_subjects rs
-                JOIN semester_subjects ss ON ss.id = rs.semester_subject_id
-                SET rs.subject_id = ss.subject_id
-            ');
+            if ($driver === 'pgsql') {
+                DB::statement('
+                    UPDATE result_subjects rs
+                    SET subject_id = ss.subject_id
+                    FROM semester_subjects ss
+                    WHERE ss.id = rs.semester_subject_id
+                ');
+            } else {
+                DB::statement('
+                    UPDATE result_subjects rs
+                    JOIN semester_subjects ss ON ss.id = rs.semester_subject_id
+                    SET rs.subject_id = ss.subject_id
+                ');
+            }
         }
     }
 
