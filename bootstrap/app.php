@@ -13,15 +13,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*'); // Trust Render's load balancer
         $middleware->alias([
             'user.active' => \App\Http\Middleware\CheckUserActiveMiddleware::class,
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
-            'permission' => \App\Http\Middleware\PermissionMiddleware::class,
+            'role'        => \App\Http\Middleware\RoleMiddleware::class,
+            'permission'  => \App\Http\Middleware\PermissionMiddleware::class,
             'page.access' => \App\Http\Middleware\CheckPageAccess::class,
-            'feature' => \App\Http\Middleware\CheckFeatureToggle::class,
-            'module' => \App\Http\Middleware\CheckModuleEnabled::class,
+            'feature'     => \App\Http\Middleware\CheckFeatureToggle::class,
+            'module'      => \App\Http\Middleware\CheckModuleEnabled::class,
             'maintenance.guard' => \App\Http\Middleware\MaintenanceModeGuard::class,
-            'no.edit' => \App\Http\Middleware\PreventEditWhenDisabled::class,
+            'no.edit'     => \App\Http\Middleware\PreventEditWhenDisabled::class,
         ]);
         $middleware->web(append: [
             \App\Http\Middleware\MaintenanceModeGuard::class,

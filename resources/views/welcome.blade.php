@@ -72,6 +72,84 @@
                 transform: translateY(-20px);
             }
         }
+        /* ---- Demo Credentials Card & Modal ---- */
+        .demo-badge {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 9999;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            color: white;
+            border-radius: 1.5rem;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 20px 60px rgba(79,70,229,0.45);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            border: 1px solid rgba(255,255,255,0.12);
+            backdrop-filter: blur(10px);
+            animation: pulse-ring 3s ease infinite;
+        }
+        .demo-badge:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 28px 70px rgba(79,70,229,0.55);
+        }
+        @keyframes pulse-ring {
+            0%, 100% { box-shadow: 0 20px 60px rgba(79,70,229,0.45); }
+            50%       { box-shadow: 0 20px 70px rgba(99,102,241,0.65); }
+        }
+        .cred-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: rgba(15,10,40,0.75);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .cred-modal-overlay.open { display: flex; }
+        .cred-modal {
+            background: white;
+            border-radius: 2rem;
+            padding: 2.5rem;
+            max-width: 520px;
+            width: 100%;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.25);
+            animation: slideUp 0.35s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to   { opacity: 1; transform: translateY(0)   scale(1); }
+        }
+        .cred-role { font-size: 0.6rem; font-weight: 900; letter-spacing: 0.15em; text-transform: uppercase; }
+        .cred-row {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 0.9rem 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            transition: background 0.15s;
+        }
+        .cred-row:hover { background: #eff6ff; border-color: #c7d2fe; }
+        .cred-copy-btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.3rem 0.65rem;
+            font-size: 0.65rem;
+            font-weight: 800;
+            cursor: pointer;
+            letter-spacing: 0.05em;
+            transition: background 0.15s;
+            flex-shrink: 0;
+        }
+        .cred-copy-btn:hover { background: #4338ca; }
+        .cred-copy-btn.copied { background: #059669; }
     </style>
 </head>
 
@@ -208,6 +286,103 @@
             &copy; {{ date('Y') }} College Management Portal Core Systems. Operational Excellence Guaranteed.
         </p>
     </footer>
+    <!-- ================================================================
+         DEMO CREDENTIALS — Floating Badge (always visible)
+         ================================================================ -->
+    @guest
+    <button class="demo-badge" onclick="document.getElementById('credModal').classList.add('open')" aria-label="View demo login credentials">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 bg-white/15 rounded-xl flex items-center justify-center flex-shrink-0">
+                <i class="bi bi-key-fill text-lg"></i>
+            </div>
+            <div>
+                <div style="font-size:0.6rem;font-weight:900;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.65)">Demo Access</div>
+                <div style="font-size:0.85rem;font-weight:800;line-height:1.1">View Login Credentials</div>
+            </div>
+            <i class="bi bi-arrow-right-circle-fill text-indigo-300 text-lg"></i>
+        </div>
+    </button>
+
+    <!-- ================================================================
+         DEMO CREDENTIALS MODAL
+         ================================================================ -->
+    <div id="credModal" class="cred-modal-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+        <div class="cred-modal">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-100 mb-2">
+                        <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span> Live Demo
+                    </div>
+                    <h2 class="text-2xl font-black text-slate-900 tracking-tight">Demo Credentials</h2>
+                    <p class="text-slate-400 text-xs font-semibold mt-0.5">All accounts use the same password</p>
+                </div>
+                <button onclick="document.getElementById('credModal').classList.remove('open')" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <!-- Password badge -->
+            <div class="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 mb-5">
+                <i class="bi bi-lock-fill text-emerald-600"></i>
+                <div>
+                    <div class="text-[10px] font-black uppercase tracking-widest text-emerald-600">Password for ALL accounts</div>
+                    <div class="text-lg font-black text-slate-800 tracking-tight">password123</div>
+                </div>
+                <button class="cred-copy-btn ml-auto" onclick="copyText('password123', this)">Copy</button>
+            </div>
+
+            <!-- Credentials list -->
+            <div class="space-y-2">
+                @php
+                $creds = [
+                    ['admin',       'bi-shield-fill',          '#4f46e5', '#ede9fe', 'Admin',        'admin@demo.com'],
+                    ['hod',         'bi-person-badge-fill',    '#0891b2', '#e0f7fa', 'HOD',          'hod@demo.com'],
+                    ['teacher',     'bi-mortarboard-fill',     '#d97706', '#fffbeb', 'Teacher',      'teacher1@demo.com'],
+                    ['teacher',     'bi-mortarboard-fill',     '#d97706', '#fffbeb', 'Teacher 2',    'teacher2@demo.com'],
+                    ['student',     'bi-person-fill',          '#059669', '#ecfdf5', 'Student',      'student1@demo.com'],
+                    ['student',     'bi-person-fill',          '#059669', '#ecfdf5', 'Student 2',    'student2@demo.com'],
+                    ['accountant',  'bi-calculator-fill',      '#7c3aed', '#f5f3ff', 'Accountant',   'accountant@demo.com'],
+                ];
+                @endphp
+                @foreach($creds as [$role, $icon, $color, $bg, $label, $email])
+                <div class="cred-row">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:{{ $bg }}">
+                            <i class="bi {{ $icon }}" style="color:{{ $color }}"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="cred-role" style="color:{{ $color }}">{{ $label }}</div>
+                            <div class="text-sm font-bold text-slate-700 truncate">{{ $email }}</div>
+                        </div>
+                    </div>
+                    <button class="cred-copy-btn" onclick="copyText('{{ $email }}', this)">Copy</button>
+                </div>
+                @endforeach
+            </div>
+
+            <!-- Login button -->
+            <a href="{{ route('login') }}" class="mt-6 flex items-center justify-center gap-2 h-12 w-full bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-black uppercase tracking-[0.15em] transition-colors">
+                <i class="bi bi-box-arrow-in-right"></i> Go to Login
+            </a>
+        </div>
+    </div>
+
+    <script>
+    function copyText(text, btn) {
+        navigator.clipboard.writeText(text).then(() => {
+            const original = btn.textContent;
+            btn.textContent = '✓ Copied';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = original;
+                btn.classList.remove('copied');
+            }, 1800);
+        });
+    }
+    </script>
+    @endguest
+
 </body>
 
 </html>
