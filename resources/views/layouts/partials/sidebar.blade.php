@@ -364,6 +364,7 @@
         </nav>
 
         <!-- Sidebar Footer -->
+        @auth
         <div class="p-4 border-t border-white/5">
             <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/5">
                 <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name) }}&background=6366f1&color=fff"
@@ -376,5 +377,6 @@
                 </div>
             </div>
         </div>
+        @endauth
     </div>
 </aside>

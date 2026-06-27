@@ -19,18 +19,20 @@
                         {{ $currentSession->name }}
                     </span>
                 @endif
-                
+                @auth
                 @if(auth()->user()->role === 'student' && auth()->user()->student && auth()->user()->student->currentSemester)
                     <span class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold border border-slate-200">
                         <i class="bi bi-mortarboard"></i>
                         {{ auth()->user()->student->currentSemester->name }}
                     </span>
                 @endif
+                @endauth
             </div>
         </div>
     </div>
 
     <div class="flex items-center gap-5">
+        @auth
         <!-- Notification Bell -->
         <button class="relative text-slate-400 hover:text-indigo-600 transition-colors">
             <i class="bi bi-bell"></i>
@@ -81,5 +83,8 @@
                 </form>
             </div>
         </div>
+        @else
+        <a href="{{ route('login') }}" class="text-xs font-bold text-slate-600 hover:text-indigo-600 uppercase tracking-wider">Sign In</a>
+        @endauth
     </div>
 </header>
