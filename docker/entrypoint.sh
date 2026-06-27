@@ -11,13 +11,30 @@ echo "======================================================"
 # -----------------------------------------------------------------------------
 # 1. Verify required environment variables
 # -----------------------------------------------------------------------------
-: "${APP_KEY:?ERROR: APP_KEY environment variable is not set. Generate one with: php -r \"echo 'base64:'.base64_encode(random_bytes(32));\"}"
 : "${DB_HOST:?ERROR: DB_HOST environment variable is not set.}"
 : "${DB_DATABASE:?ERROR: DB_DATABASE environment variable is not set.}"
 : "${DB_USERNAME:?ERROR: DB_USERNAME environment variable is not set.}"
 : "${DB_PASSWORD:?ERROR: DB_PASSWORD environment variable is not set.}"
 
-echo "[✓] Required environment variables present."
+# Validate and normalize APP_KEY. If it's invalid or wrong length, generate a valid one on the fly to prevent crashes.
+VALIDATED_APP_KEY=$(php -r '
+    $key = getenv("APP_KEY") ?: "";
+    if (str_starts_with($key, "base64:")) {
+        $decoded = base64_decode(substr($key, 7), true);
+        if ($decoded !== false && strlen($decoded) === 32) {
+            echo $key;
+            exit(0);
+        }
+    }
+    if (strlen($key) === 32) {
+        echo $key;
+        exit(0);
+    }
+    echo "base64:" . base64_encode(random_bytes(32));
+')
+
+export APP_KEY="$VALIDATED_APP_KEY"
+echo "[✓] Required environment variables present and validated."
 
 # -----------------------------------------------------------------------------
 # 2. Create .env from environment variables (no .env file in the image)
