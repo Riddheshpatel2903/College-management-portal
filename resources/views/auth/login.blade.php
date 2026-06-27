@@ -211,6 +211,83 @@
             font-size: 12px;
             color: #94a3b8;
         }
+        /* ---- Demo Credentials Card & Modal ---- */
+        .demo-badge {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 9999;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            color: white;
+            border-radius: 1.5rem;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 20px 60px rgba(79,70,229,0.45);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            border: 1px solid rgba(255,255,255,0.12);
+            backdrop-filter: blur(10px);
+            animation: pulse-ring 3s ease infinite;
+        }
+        .demo-badge:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 28px 70px rgba(79,70,229,0.55);
+        }
+        @keyframes pulse-ring {
+            0%, 100% { box-shadow: 0 20px 60px rgba(79,70,229,0.45); }
+            50%       { box-shadow: 0 20px 70px rgba(99,102,241,0.65); }
+        }
+        .cred-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: rgba(15,10,40,0.75);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .cred-modal-overlay.open { display: flex; }
+        .cred-modal {
+            background: white;
+            border-radius: 2rem;
+            padding: 2.5rem;
+            max-width: 520px;
+            width: 100%;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.25);
+            animation: slideUp 0.35s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to   { opacity: 1; transform: translateY(0)   scale(1); }
+        }
+        .cred-role { font-size: 0.6rem; font-weight: 900; letter-spacing: 0.15em; text-transform: uppercase; }
+        .cred-row {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 0.9rem 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            transition: background 0.15s;
+        }
+        .cred-row:hover { background: #eff6ff; border-color: #c7d2fe; }
+        .cred-copy-btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.65rem;
+            font-weight: 800;
+            cursor: pointer;
+            letter-spacing: 0.05em;
+            transition: background 0.15s;
+            flex-shrink: 0;
+        }
+        .cred-copy-btn:hover { background: #4338ca; }
     </style>
 </head>
 
@@ -282,7 +359,86 @@
             document.querySelectorAll('.role-btn').forEach(c => c.classList.remove('active'));
             Array.from(document.querySelectorAll('.role-btn')).find(c => c.innerText.toLowerCase().includes(role))?.classList.add('active');
         }
+        function useCreds(email, role) {
+            document.querySelector('input[name="email"]').value = email;
+            document.querySelector('input[name="password"]').value = 'password123';
+            selectRole(role);
+            document.getElementById('credModal').classList.remove('open');
+        }
     </script>
+
+    <!-- ================================================================
+         DEMO CREDENTIALS — Floating Badge (always visible)
+         ================================================================ -->
+    <button class="demo-badge" onclick="document.getElementById('credModal').classList.add('open')" aria-label="View demo login credentials">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:36px;height:36px;background:rgba(255,255,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-key-fill" style="font-size:18px;"></i>
+            </div>
+            <div style="text-align:left;">
+                <div style="font-size:9px;font-weight:900;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.65)">Quick Access</div>
+                <div style="font-size:13px;font-weight:800;line-height:1.1">Demo Credentials</div>
+            </div>
+            <i class="bi bi-arrow-right-circle-fill" style="color:#a5b4fc;font-size:18px;margin-left:4px;"></i>
+        </div>
+    </button>
+
+    <!-- ================================================================
+         DEMO CREDENTIALS MODAL
+         ================================================================ -->
+    <div id="credModal" class="cred-modal-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+        <div class="cred-modal">
+            <!-- Header -->
+            <div style="display:flex;align-items:center;justify-content:between;margin-bottom:24px;width:100%;">
+                <div style="flex-1:1 0 auto;">
+                    <div style="display:inline-flex;align-items:center;gap:8px;padding:4px 12px;background:#f5f3ff;color:#6366f1;border-radius:100px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;border:1px solid #e0e7ff;margin-bottom:8px;">
+                        <span style="width:6px;height:6px;background:#6366f1;border-radius:100px;" class="animate-pulse"></span> Auto-Fill Enabled
+                    </div>
+                    <h2 style="font-size:24px;font-weight:900;color:#1e293b;letter-spacing:-0.5px;">Select an Account</h2>
+                    <p style="color:#94a3b8;font-size:12px;font-weight:600;margin-top:2px;">Click any account to automatically fill in details</p>
+                </div>
+                <button onclick="document.getElementById('credModal').classList.remove('open')" style="width:40px;height:40px;border-radius:100px;background:#f1f5f9;border:none;cursor:pointer;color:#64748b;display:flex;align-items:center;justify-content:center;margin-left:auto;">
+                    <i class="bi bi-x-lg" style="font-size:16px;"></i>
+                </button>
+            </div>
+
+            <!-- Password Info -->
+            <div style="display:flex;align-items:center;gap:12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:12px;padding:12px 16px;margin-bottom:20px;">
+                <i class="bi bi-lock-fill" style="color:#059669;font-size:18px;"></i>
+                <div>
+                    <div style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#059669;">Universal Password</div>
+                    <div style="font-size:16px;font-weight:900;color:#1f2937;">password123</div>
+                </div>
+            </div>
+
+            <!-- Credentials List -->
+            <div style="display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto;padding-right:4px;">
+                @php
+                $creds = [
+                    ['admin',       'bi-shield-fill',          '#4f46e5', '#ede9fe', 'Admin',        'admin@demo.com'],
+                    ['hod',         'bi-person-badge-fill',    '#0891b2', '#e0f7fa', 'HOD',          'hod@demo.com'],
+                    ['teacher',     'bi-mortarboard-fill',     '#d97706', '#fffbeb', 'Teacher',      'teacher1@demo.com'],
+                    ['student',     'bi-person-fill',          '#059669', '#ecfdf5', 'Student',      'student1@demo.com'],
+                    ['accountant',  'bi-calculator-fill',      '#7c3aed', '#f5f3ff', 'Accountant',   'accountant@demo.com'],
+                ];
+                @endphp
+                @foreach($creds as [$role, $icon, $color, $bg, $label, $email])
+                <div class="cred-row" onclick="useCreds('{{ $email }}', '{{ $role }}')" style="cursor:pointer;">
+                    <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+                        <div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:{{ $bg }};flex-shrink:0;">
+                            <i class="bi {{ $icon }}" style="color:{{ $color }};font-size:16px;"></i>
+                        </div>
+                        <div style="min-width:0;text-align:left;">
+                            <div class="cred-role" style="color:{{ $color }}">{{ $label }}</div>
+                            <div style="font-size:13px;font-weight:700;color:#334155;" class="truncate">{{ $email }}</div>
+                        </div>
+                    </div>
+                    <button class="cred-copy-btn" style="pointer-events:none;">Use Account</button>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
